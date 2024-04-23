@@ -12,92 +12,121 @@ using UnityEditor;
 // Ideally this would be a struct, but we need the ISerializationCallbackReciever
 namespace AeLa.Utilities.GUID
 {
-    [Serializable]
-    public class GuidReference : ISerializationCallbackReceiver
-    {
-        // cache the referenced Game Object if we find one for performance
-        private GameObject cachedReference;
-        private bool isCacheSet;
+	[Serializable]
+	public class GuidReference : ISerializationCallbackReceiver, IDisposable
+	{
+		// cache the referenced Game Object if we find one for performance
+		private GameObject cachedReference;
+		private bool isCacheSet;
 
-        // store our GUID in a form that Unity can save
-        [SerializeField]
-        private byte[] serializedGuid;
-        private System.Guid guid;
+		// store our GUID in a form that Unity can save
+		[SerializeField]
+		private byte[] serializedGuid;
+
+		private Guid guid;
 
 #if UNITY_EDITOR
-        // decorate with some extra info in Editor so we can inform a user of what that GUID means
-        [SerializeField]
-        private string cachedName;
-        [SerializeField]
-        private SceneAsset cachedScene;
+		// decorate with some extra info in Editor so we can inform a user of what that GUID means
+		[SerializeField]
+		private string cachedName;
+
+		[SerializeField]
+		private SceneAsset cachedScene;
 #endif
 
-        // Set up events to let users register to cleanup their own cached references on destroy or to cache off values
-        public event Action<GameObject> OnGuidAdded = delegate (GameObject go) { };
-        public event Action OnGuidRemoved = delegate() { };
+		// Set up events to let users register to cleanup their own cached references on destroy or to cache off values
+		public event Action<GameObject> OnGuidAdded = delegate { };
+		public event Action OnGuidRemoved = delegate { };
 
-        // create concrete delegates to avoid boxing.
-        // When called 10,000 times, boxing would allocate ~1MB of GC Memory
-        private Action<GameObject> addDelegate;
-        private Action removeDelegate;
+		// create concrete delegates to avoid boxing.
+		// When called 10,000 times, boxing would allocate ~1MB of GC Memory
+		private Action<GameObject> addDelegate;
+		private Action removeDelegate;
+		private bool subscribed;
 
-        // optimized accessor, and ideally the only code you ever call on this class
-        public GameObject gameObject
-        {
-            get
-            {
-                if( isCacheSet )
-                {
-                    return cachedReference;
-                }
+		public GameObject gameObject => ResolveGameObject();
 
-                cachedReference = GuidManager.ResolveGuid( guid, addDelegate, removeDelegate );
-                isCacheSet = true;
-                return cachedReference;
-            }
+		public GuidReference()
+		{
+			// resolve guid right away to register listeners
+			addDelegate = GuidAdded;
+			removeDelegate = GuidRemoved;
+			ResolveGameObject();
+		}
 
-            private set {}
-        }
+		public GuidReference(GuidComponent target)
+		{
+			guid = target.GetGuid();
 
-        public GuidReference() { }
+			// resolve guid right away to register listeners
+			addDelegate = GuidAdded;
+			removeDelegate = GuidRemoved;
+			ResolveGameObject();
+		}
 
-        public GuidReference(GuidComponent target)
-        {
-            guid = target.GetGuid();
-        }
+		private GameObject ResolveGameObject()
+		{
+			if (isCacheSet)
+			{
+				return cachedReference;
+			}
 
-        private void GuidAdded(GameObject go)
-        {
-            cachedReference = go;
-            OnGuidAdded(go);
-        }
+			// prevent listeners being added multiple when cachedReference is removed/added again
+			if (!subscribed)
+			{
+				cachedReference = GuidManager.ResolveGuid(guid, addDelegate, removeDelegate);
+				subscribed = true;
+			}
+			else
+			{
+				cachedReference = GuidManager.ResolveGuid(guid);
+			}
 
-        private void GuidRemoved()
-        {
-            cachedReference = null;
-            isCacheSet = false;
-            OnGuidRemoved();
-        }
+			isCacheSet = true;
+			return cachedReference;
+		}
 
-        //convert system guid to a format unity likes to work with
-        public void OnBeforeSerialize()
-        {
-            serializedGuid = guid.ToByteArray();
-        }
+		private void GuidAdded(GameObject go)
+		{
+			cachedReference = go;
+			OnGuidAdded(go);
+		}
 
-        // convert from byte array to system guid and reset state
-        public void OnAfterDeserialize()
-        {
-            cachedReference = null;
-            isCacheSet = false;
-            if (serializedGuid == null || serializedGuid.Length != 16)
-            {
-                serializedGuid = new byte[16];
-            }
-            guid = new System.Guid(serializedGuid);
-            addDelegate = GuidAdded;
-            removeDelegate = GuidRemoved;
+		private void GuidRemoved()
+		{
+			cachedReference = null;
+			isCacheSet = false;
+			OnGuidRemoved();
+		}
 
-        }
-    }
+		//convert system guid to a format unity likes to work with
+		public void OnBeforeSerialize()
+		{
+			serializedGuid = guid.ToByteArray();
+		}
+
+		// convert from byte array to system guid and reset state
+		public void OnAfterDeserialize()
+		{
+			cachedReference = null;
+			isCacheSet = false;
+			if (serializedGuid == null || serializedGuid.Length != 16)
+			{
+				serializedGuid = new byte[16];
+			}
+
+			addDelegate = GuidAdded;
+			removeDelegate = GuidRemoved;
+			guid = new Guid(serializedGuid);
+		}
+
+		public void Dispose()
+		{
+			if (subscribed)
+			{
+				GuidManager.RemoveCallbacks(guid, addDelegate, removeDelegate);
+				subscribed = false;
+			}
+		}
+	}
 }
