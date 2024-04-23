@@ -1,6 +1,6 @@
 # com.aela.utilities.guid
 
-[Unity-Technologies/guid-based-reference] with some changes including UPM support.
+[Unity-Technologies/guid-based-reference](https://github.com/Unity-Technologies/guid-based-reference) with some changes including UPM support.
 
 See original README from Unity repository below.
 
