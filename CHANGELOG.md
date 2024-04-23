@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.1] - 2024-04-23
 
+### Added
+
+- GuidReference copy method
+- Public GuidReference.Guid property
+
 ### Fixed
 
 - Compiler error

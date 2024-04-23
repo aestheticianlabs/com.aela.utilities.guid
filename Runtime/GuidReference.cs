@@ -24,6 +24,7 @@ namespace AeLa.Utilities.GUID
 		private byte[] serializedGuid;
 
 		private Guid guid;
+		public Guid Guid => guid;
 
 #if UNITY_EDITOR
 		// decorate with some extra info in Editor so we can inform a user of what that GUID means
@@ -59,6 +60,15 @@ namespace AeLa.Utilities.GUID
 			guid = target.GetGuid();
 
 			// resolve guid right away to register listeners
+			addDelegate = GuidAdded;
+			removeDelegate = GuidRemoved;
+			ResolveGameObject();
+		}
+
+		public GuidReference(GuidReference copy)
+		{
+			guid = copy.guid;
+
 			addDelegate = GuidAdded;
 			removeDelegate = GuidRemoved;
 			ResolveGameObject();
