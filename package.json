@@ -4,5 +4,9 @@
 	"displayName": "AeLa GUID Reference",
 	"description": "A component for giving Game Objects a GUID and a class to create references to objects in any Scene by GUID",
 	"unity": "2022.3",
-	"documentationUrl": "https://github.com/aestheticianlabs/guid-based-reference"
+	"documentationUrl": "https://github.com/aestheticianlabs/guid-based-reference",
+	"author": {
+		"name": "Aesthetician Labs",
+		"url": "https://aesthetic.games/"
+	}
 }
