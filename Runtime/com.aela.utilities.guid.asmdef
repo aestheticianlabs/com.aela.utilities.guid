@@ -1,0 +1,14 @@
+{
+    "name": "com.aela.utilities.guid",
+    "rootNamespace": "AeLa.Utilities.GUID",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,4 +1,10 @@
-Guid Based Reference
+# com.aela.utilities.guid
+
+[Unity-Technologies/guid-based-reference] with some changes including UPM support.
+
+See original README from Unity repository below.
+
+## Guid Based Reference
 
 License - Please see LICENSE.md in this repository
 
